@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Resultaten Redeneertest</title>
+<script>
+  (function(){ var t = 'dark'; try { t = localStorage.getItem('redeneertest-g8-v1-theme') || 'dark'; } catch (e) {} document.documentElement.dataset.theme = t; })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f7f6; --surface:#ffffff; --surface-2:#eef4f2; --ink:#16232b; --muted:#5b6b73;
+  --line:#d5e0dd; --brand:#13695f; --brand-ink:#ffffff; --brand-soft:#dcefeb;
+  --good:#1f8a4c; --bad:#c2410c; --accent:#e0902a;
+  --shadow:0 1px 2px rgba(16,35,43,.06),0 8px 24px rgba(16,35,43,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1719; --surface:#172225; --surface-2:#1e2c30; --ink:#e7efed; --muted:#9db0b2;
+    --line:#2c3d41; --brand:#4cc3ad; --brand-ink:#08201c; --brand-soft:#1d3a36;
+    --good:#4ccf86; --bad:#ff8a5c; --accent:#f0b25a; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1719; --surface:#172225; --surface-2:#1e2c30; --ink:#e7efed; --muted:#9db0b2;
+  --line:#2c3d41; --brand:#4cc3ad; --brand-ink:#08201c; --brand-soft:#1d3a36;
+  --good:#4ccf86; --bad:#ff8a5c; --accent:#f0b25a; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px}
+header{border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:12px;height:60px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800}
+.logo-mark{width:32px;height:32px;border-radius:10px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center}
+.spacer{flex:1}
+.icon-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;width:38px;height:38px;cursor:pointer;font-size:17px}
+main{padding:28px 0 80px}
+h1{font-size:clamp(26px,5vw,36px);margin:0 0 4px;letter-spacing:-.02em}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px;margin-top:18px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+input{font:inherit;padding:11px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);min-width:0;flex:1;max-width:280px}
+input:focus{outline:none;border-color:var(--brand)}
+.btn{font:inherit;font-weight:700;border:0;border-radius:12px;padding:11px 18px;cursor:pointer;background:var(--brand);color:var(--brand-ink)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.msg{margin:10px 0 0;color:var(--bad);font-weight:600;min-height:1.5em}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.stat b{display:block;font-size:28px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:14px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:26px 0 10px}
+.tools h2{margin:0 auto 0 0;font-size:22px}
+.chip{font:inherit;font-size:14px;font-weight:700;padding:7px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:11px 14px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+th{font-size:13px;color:var(--muted);font-weight:700;cursor:pointer;user-select:none;background:var(--surface-2)}
+th.num,td.num{text-align:right}
+td.name{font-weight:700;white-space:normal;min-width:120px}
+.score{display:flex;align-items:center;gap:10px;justify-content:flex-end}
+.score b{font-size:18px}
+.mini{width:80px;height:8px;border-radius:9px;background:var(--surface-2);overflow:hidden}
+.mini>div{height:100%;background:var(--brand)}
+.status{font-size:13px;font-weight:700;padding:3px 10px;border-radius:99px}
+.status.done{background:var(--brand-soft);color:var(--brand)}
+.status.busy{background:var(--surface-2);color:var(--muted)}
+.heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.cell{border-radius:10px;padding:8px 6px;text-align:center;font-size:13px;font-weight:700;color:#0d1a14}
+.cell small{display:block;font-weight:600;opacity:.75}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:12px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:6px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="logo"><div class="logo-mark">◆</div><span>Redeneertest · resultaten</span></div>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="themeBtn" title="Licht / donker" aria-label="Wissel licht en donker">◐</button>
+</div></header>
+
+<main class="wrap">
+  <h1>Resultaten</h1>
+  <p class="muted" style="margin:0">Overzicht van iedereen die de test maakt of heeft gemaakt.</p>
+
+  <div class="card" id="loginCard">
+    <div class="row">
+      <input type="password" id="codeInput" placeholder="Code van de leerkracht" autocomplete="current-password">
+      <button class="btn" id="loadBtn">Laat resultaten zien</button>
+    </div>
+    <p class="msg" id="msg"></p>
+  </div>
+
+  <section id="out" class="hidden">
+    <div class="stats" id="stats"></div>
+
+    <div class="tools">
+      <h2>Leerlingen</h2>
+      <button class="chip on" data-f="all">Iedereen</button>
+      <button class="chip" data-f="done">Alleen klaar</button>
+      <button class="btn ghost" id="refreshBtn">↻ Vernieuwen</button>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th data-s="name">Naam</th><th data-s="done">Status</th><th class="num" data-s="score">Aantal goed ▾</th>
+        <th class="num" data-s="p0">Woordverb.</th><th class="num" data-s="p1">Getallen</th><th class="num" data-s="p2">Logisch</th><th class="num" data-s="p3">Figuren</th>
+        <th data-s="updated">Laatst bijgewerkt</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table></div>
+
+    <div class="tools"><h2>Per vraag</h2><span class="muted" style="font-size:14px">% goed van de leerlingen die de vraag beantwoordden</span></div>
+    <div class="card" style="margin-top:0">
+      <div class="heat" id="heat"></div>
+      <div class="legend">
+        <span><i style="background:#e8806a"></i>minder dan 40%</span>
+        <span><i style="background:#f2c46b"></i>40–70%</span>
+        <span><i style="background:#7fd3a0"></i>70% of meer</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const qid = (i, j) => `${i + 1}${'abcd'[j]}`;
+const CODE_KEY = 'redeneertest-g8-code';
+let rows = [], filter = 'all', sortKey = 'score', sortDir = -1;
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(v){
+  const d = new Date(v); if (isNaN(d)) return '';
+  return d.toLocaleString('nl-NL', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+function grade(answers){
+  let score = 0, answered = 0; const p = [0,0,0,0];
+  OPG.forEach((o, i) => o.qs.forEach((q, j) => {
+    const a = answers[qid(i,j)]; if (a == null) return; answered++;
+    if (a === q.a) { score++; p[o.p]++; }
+  }));
+  return { score, answered, p };
+}
+
+async function load(){
+  const code = $('codeInput').value.trim();
+  if (!SHEET_URL) { $('msg').textContent = 'De opslag is nog niet ingesteld (config.js is leeg).'; return; }
+  if (!code) { $('msg').textContent = 'Vul de code in.'; return; }
+  $('msg').textContent = ''; $('loadBtn').disabled = true; $('refreshBtn').disabled = true;
+  try {
+    const res = await fetch(SHEET_URL + '?code=' + encodeURIComponent(code), { cache:'no-store' });
+    const data = await res.json();
+    if (data.error) { $('msg').textContent = 'Deze code klopt niet.'; return; }
+    try { localStorage.setItem(CODE_KEY, code); } catch (e) {}
+    rows = (data.rows || []).map(r => { const g = grade(r.answers || {}); return { ...r, ...g, p0:g.p[0], p1:g.p[1], p2:g.p[2], p3:g.p[3] }; });
+    $('loginCard').classList.add('hidden'); $('out').classList.remove('hidden');
+    render();
+  } catch (e) {
+    $('msg').textContent = 'Kon de resultaten niet ophalen. Controleer de internetverbinding en de URL in config.js.';
+  } finally { $('loadBtn').disabled = false; $('refreshBtn').disabled = false; }
+}
+
+function render(){
+  const done = rows.filter(r => r.done);
+  const avg = done.length ? done.reduce((s, r) => s + r.score, 0) / done.length : 0;
+  const best = done.length ? Math.max(...done.map(r => r.score)) : 0;
+  $('stats').innerHTML = [
+    [rows.length, 'leerlingen gestart'], [done.length, 'klaar met de test'],
+    [done.length ? avg.toFixed(1).replace('.', ',') : '–', 'gemiddeld goed (klaar)'], [done.length ? best : '–', 'hoogste score']
+  ].map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
+
+  const list = rows.filter(r => filter === 'all' || r.done).slice().sort((a, b) => {
+    let x = a[sortKey], y = b[sortKey];
+    if (sortKey === 'name') return sortDir * String(x).localeCompare(String(y), 'nl');
+    if (sortKey === 'updated') { x = new Date(x).getTime() || 0; y = new Date(y).getTime() || 0; }
+    return sortDir * ((x > y) - (x < y));
+  });
+  $('tbody').innerHTML = list.length ? list.map(r => `<tr>
+    <td class="name">${esc(r.name || '(geen naam)')}</td>
+    <td>${r.done ? '<span class="status done">Klaar</span>' : `<span class="status busy">Bezig · ${r.answered}/96</span>`}</td>
+    <td class="num"><div class="score"><div class="mini"><div style="width:${r.score / 96 * 100}%"></div></div><b>${r.score}</b><span class="muted">/96</span></div></td>
+    <td class="num">${r.p0}/24</td><td class="num">${r.p1}/24</td><td class="num">${r.p2}/24</td><td class="num">${r.p3}/24</td>
+    <td class="muted">${fmtDate(r.updated)}</td></tr>`).join('')
+    : `<tr><td colspan="8" class="empty">Nog geen resultaten${filter === 'done' ? ' van leerlingen die klaar zijn' : ''}.</td></tr>`;
+
+  document.querySelectorAll('th').forEach(th => {
+    th.textContent = th.textContent.replace(/ [▾▴]$/, '') + (th.dataset.s === sortKey ? (sortDir < 0 ? ' ▾' : ' ▴') : '');
+  });
+
+  let h = '';
+  OPG.forEach((o, i) => o.qs.forEach((q, j) => {
+    const id = qid(i, j); let n = 0, ok = 0;
+    rows.forEach(r => { const a = (r.answers || {})[id]; if (a != null) { n++; if (a === q.a) ok++; } });
+    const pct = n ? Math.round(ok / n * 100) : null;
+    const bg = pct == null ? 'var(--surface-2)' : pct < 40 ? '#e8806a' : pct < 70 ? '#f2c46b' : '#7fd3a0';
+    h += `<div class="cell" style="background:${bg};${pct == null ? 'color:var(--muted)' : ''}" title="${id}: ${ok} van ${n} goed">${id}<small>${pct == null ? '–' : pct + '%'}</small></div>`;
+  }));
+  $('heat').innerHTML = h;
+}
+
+$('loadBtn').onclick = load;
+$('refreshBtn').onclick = load;
+$('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') load(); });
+document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+  filter = c.dataset.f; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); render();
+});
+document.querySelectorAll('th').forEach(th => th.onclick = () => {
+  const k = th.dataset.s;
+  if (k === sortKey) sortDir *= -1; else { sortKey = k; sortDir = (k === 'name' ? 1 : -1); }
+  render();
+});
+$('themeBtn').onclick = () => {
+  const root = document.documentElement;
+  root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('redeneertest-g8-v1-theme', root.dataset.theme); } catch (e) {}
+};
+try { const c = localStorage.getItem(CODE_KEY); if (c) { $('codeInput').value = c; load(); } } catch (e) {}
+</script>
+</body>
+</html>
