@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="live.css?v=4">
+<link rel="stylesheet" href="live.css?v=5">
 <style>
 .setup{max-width:860px;margin:0 auto;padding:28px 16px 60px}
 .label{font-weight:800;margin:22px 0 8px}
@@ -40,6 +40,17 @@
 .minichips span.done{border-color:var(--good);color:var(--good)}
 .minichips span.off{opacity:.4;text-decoration:line-through}
 .counts .tile{cursor:default}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;max-width:980px;margin:0 auto 20px}
+.fact{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 16px;animation:pop .35s ease both}
+.fact .ic{font-size:28px;line-height:1}
+.fact .t{display:block;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.fact b{display:block;font-size:20px;line-height:1.25}
+.fact .sub{display:block;font-size:14px;color:var(--muted);font-weight:600}
+.board .nm{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mv{font-size:13px;font-weight:800;padding:2px 8px;border-radius:99px}
+.mv.up{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.mv.down{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.fire{font-size:14px;font-weight:800;color:var(--accent)}
 </style>
 </head>
 <body>
@@ -112,6 +123,7 @@
 <section id="hEnd" class="lobby hidden">
   <h1>🏆 Uitslag</h1>
   <div id="endPodium"></div>
+  <div class="facts" id="endFacts" style="text-align:left"></div>
   <div class="board" id="endBoard" style="max-width:640px;margin:20px auto 0;text-align:left"></div>
   <p class="muted" style="margin-top:20px">Alle antwoorden en de eindstand staan in je Google Sheet, op de tabbladen <b>Live antwoorden</b> en <b>Live eindstand</b>.</p>
   <button class="btn big" id="newBtn">Nieuw spel</button>
@@ -120,15 +132,15 @@
 <div id="pauseOv" class="overlay hidden"><div><div class="big">⏸ Pauze</div><p style="font-size:19px;opacity:.9">De quiz staat stil.</p><button class="btn big" id="resumeOvBtn">▶ Verder</button></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="config.js?v=4"></script>
-<script src="data.js?v=4"></script>
-<script src="live-common.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="data.js?v=5"></script>
+<script src="live-common.js?v=5"></script>
 <script>
 const SCREENS = ['hSetup', 'hLobby', 'hQ', 'hEnd'];
 const show = (id) => SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id));
 const JOIN_URL = new URL('live.html', location.href).href;
 let host = store('live-host');                // {code, key}
-let last = null, view = 'reveal', pollTimer = null, fails = 0, busy = false, renderedKey = '';
+let last = null, pollTimer = null, fails = 0, busy = false, renderedKey = '';
 const cd = makeCountdown(left => renderTimer($('hBar'), $('hSecs'), left));
 $('themeBtn').onclick = themeToggle;
 
@@ -205,7 +217,6 @@ async function send(cmd, extra = {}) {
     fails = 0; $('conn').classList.add('hidden');
     if (my < handledSeq) return;            // ouder antwoord dan wat al getoond wordt
     handledSeq = my;
-    if (cmd === 'next' || cmd === 'start') view = 'reveal';
     handle(s);
   } catch (e) {
     fails++; $('conn').classList.remove('hidden');
@@ -232,6 +243,7 @@ function handle(s) {
   if (s.st === 'lobby') return renderLobby(s);
   if (s.st === 'end') return renderEnd(s);
   show('hQ');
+  const view = s.board ? 'board' : 'reveal';
   const key = `${s.st}|${s.qi}|${view}`;
   const { q } = findQ(s.qid);
   $('hNum').textContent = `${s.qi + 1}/${s.n}`;
@@ -261,18 +273,46 @@ function handle(s) {
           <span class="count" title="${Math.round((s.counts[k] || 0) / total * 100)}%">${s.counts[k] || 0}</span></div>`).join('')}</div>
         <p class="muted" style="margin-top:14px"><b>Uitleg:</b> ${q.w}</p>`;
     } else {
-      $('hMain').innerHTML = `<h2 style="text-align:center;margin:10px 0 18px">Tussenstand</h2><div class="board" id="hBoard" style="max-width:680px;margin:0 auto"></div>`;
+      $('hMain').innerHTML = `<h2 style="text-align:center;margin:10px 0 18px">Tussenstand</h2>
+        <div class="facts" id="hFacts"></div>
+        <div class="board" id="hBoard" style="max-width:720px;margin:0 auto"></div>`;
     }
   }
+  if ($('hFacts')) $('hFacts').innerHTML = factsHtml(s);
   if (s.st === 'q' && $('hChips')) {
     $('hChips').innerHTML = s.players.map(p => `<span class="${p.answered ? 'done' : ''} ${p.online || p.answered ? '' : 'off'}" title="${p.online ? 'online' : 'niet verbonden'}">${esc(p.name)}</span>`).join('');
   }
   if ($('hBoard')) $('hBoard').innerHTML = boardHtml(s.players.slice(0, 10), true);
 }
+function moveHtml(p) {
+  if (p.prev == null) return '';
+  const d = p.prev - p.rank;
+  return d > 0 ? `<span class="mv up" title="${d} plek(ken) gestegen">▲${d}</span>`
+       : d < 0 ? `<span class="mv down" title="${-d} plek(ken) gedaald">▼${-d}</span>` : '';
+}
 function boardHtml(list, gain) {
-  return list.map(p => `<div class="row"><span class="pos">${p.rank}</span><span>${esc(p.name)}</span>
+  return list.map(p => `<div class="row"><span class="pos">${p.rank}</span>
+    <span class="nm">${esc(p.name)} ${moveHtml(p)} ${p.streak >= 2 ? `<span class="fire" title="${p.streak} goed op rij">🔥${p.streak}</span>` : ''}</span>
     <span class="gain">${gain && p.gain ? '+' + p.gain : ''}</span><span class="sc">${p.score}</span></div>`).join('') ||
     '<p class="muted" style="text-align:center">Geen spelers.</p>';
+}
+/* Weetjes bij de tussenstand */
+function factsHtml(s) {
+  const P = s.players, out = [];
+  const names = (list) => list.slice(0, 3).map(p => esc(p.name)).join(', ') + (list.length > 3 ? ` en ${list.length - 3} anderen` : '');
+  const okN = P.filter(p => p.ok).length, ansN = (s.counts || []).reduce((a, b) => a + b, 0);
+  out.push(['🎯', 'Goed deze ronde', `${okN} van ${P.length}`, ansN < P.length ? `${P.length - ansN} gaven geen antwoord` : 'iedereen antwoordde']);
+  const topStreak = Math.max(0, ...P.map(p => p.streak));
+  if (topStreak >= 2) out.push(['🔥', 'Langste reeks nu', `${topStreak} goed op rij`, names(P.filter(p => p.streak === topStreak))]);
+  const fast = P.filter(p => p.ok && p.ms != null).sort((a, b) => a.ms - b.ms)[0];
+  if (fast) out.push(['⚡', 'Snelste goede antwoord', `${(fast.ms / 1000).toFixed(1).replace('.', ',')} s`, esc(fast.name)]);
+  const climbs = P.filter(p => p.prev != null).map(p => ({ p, d: p.prev - p.rank })).filter(x => x.d > 0).sort((a, b) => b.d - a.d);
+  if (climbs.length) out.push(['🚀', 'Grootste stijger', `${climbs[0].d} ${climbs[0].d === 1 ? 'plek' : 'plekken'} omhoog`, names(climbs.filter(x => x.d === climbs[0].d).map(x => x.p))]);
+  if (P.length >= 2 && P[0].score > 0) {
+    const gap = P[0].score - P[1].score;
+    out.push(['👑', 'Aan kop', esc(P[0].name), gap > 0 ? `${gap} punten voor op ${esc(P[1].name)}` : `gelijk met ${esc(P[1].name)}`]);
+  }
+  return out.map(([ic, t, big, sub]) => `<div class="fact"><span class="ic">${ic}</span><div><span class="t">${t}</span><b>${big}</b><span class="sub">${sub}</span></div></div>`).join('');
 }
 let qrDone = '';
 function renderLobby(s) {
@@ -294,6 +334,12 @@ let endShown = false;
 function renderEnd(s) {
   show('hEnd');
   $('endPodium').innerHTML = podiumHtml(s.players.slice(0, 3));
+  const P = s.players, best = Math.max(0, ...P.map(p => p.best)), most = Math.max(0, ...P.map(p => p.correct));
+  const who = (l) => l.slice(0, 3).map(p => esc(p.name)).join(', ') + (l.length > 3 ? ` en ${l.length - 3} anderen` : '');
+  const f = [];
+  if (best >= 2) f.push(['🔥', 'Langste reeks van het spel', `${best} goed op rij`, who(P.filter(p => p.best === best))]);
+  if (most > 0) f.push(['🎯', 'Meeste goed', `${most} van ${s.qi + 1}`, who(P.filter(p => p.correct === most))]);
+  $('endFacts').innerHTML = f.map(([ic, t, big, sub]) => `<div class="fact"><span class="ic">${ic}</span><div><span class="t">${t}</span><b>${big}</b><span class="sub">${sub}</span></div></div>`).join('');
   $('endBoard').innerHTML = s.players.map(p => `<div class="row"><span class="pos">${p.rank}</span><span>${esc(p.name)}</span>
     <span class="gain" style="color:var(--muted)">${p.correct} goed</span><span class="sc">${p.score}</span></div>`).join('');
   if (!endShown) { endShown = true; confetti(); }
@@ -304,7 +350,7 @@ $('startBtn').onclick = () => send('start');
 $('pauseBtn').onclick = () => send(last && last.paused ? 'resume' : 'pause');
 $('resumeOvBtn').onclick = () => send('resume');
 $('skipBtn').onclick = () => { if (confirm('Deze vraag nu stoppen?')) send('skip'); };
-$('boardBtn').onclick = () => { view = 'board'; handle(last); };
+$('boardBtn').onclick = () => send('board');
 $('nextBtn').onclick = () => send('next');
 $('endBtn').onclick = () => { if (confirm('Het hele spel beëindigen? De uitslag wordt opgeslagen.')) send('end'); };
 $('endLobbyBtn').onclick = () => { if (confirm('Spel stoppen?')) send('end'); };

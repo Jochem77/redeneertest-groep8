@@ -152,3 +152,12 @@ button.chip:hover{border-color:var(--bad);text-decoration:line-through}
 .mline.v{border-left-width:3px;top:-8px;bottom:-8px}
 .mline.h{border-top-width:3px;left:-8px;right:-8px}
 .rot-arrow{font-size:26px;color:var(--muted);font-weight:700}
+
+/* tussenstand speler */
+.myrank{display:flex;align-items:center;justify-content:center;gap:14px;font-size:clamp(46px,11vw,80px);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin:6px 0 8px}
+.mv-big{font-size:22px;font-weight:800;padding:6px 14px;border-radius:999px;letter-spacing:0}
+.mv-big:empty{display:none}
+.mv-big.up{background:color-mix(in srgb,var(--good) 20%,transparent);color:var(--good)}
+.mv-big.down{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad)}
+.fire-line{font-size:19px;font-weight:800;color:var(--accent);margin:8px 0 0;min-height:0}
+.fire-line:empty{display:none}

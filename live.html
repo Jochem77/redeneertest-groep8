@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="live.css?v=4">
+<link rel="stylesheet" href="live.css?v=5">
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -77,6 +77,17 @@
   <p class="sub pulse" style="font-size:15px;margin-top:30px">Wacht op de volgende vraag…</p>
 </div></section>
 
+<!-- Tussenstand -->
+<section id="sBoard" class="center hidden"><div style="max-width:520px">
+  <p class="muted" style="font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:13px;margin:0">Tussenstand</p>
+  <div class="myrank"><span id="bRank"></span><span class="mv-big" id="bMove"></span></div>
+  <p id="bScore" style="font-size:20px;font-weight:700;margin:0"></p>
+  <p id="bStreak" class="fire-line"></p>
+  <div class="board" id="bList" style="text-align:left;margin-top:18px"></div>
+  <p id="bTip" style="font-size:18px;font-weight:700;margin-top:18px"></p>
+  <p class="muted pulse" style="font-size:15px;margin-top:20px">Wacht op de volgende vraag…</p>
+</div></section>
+
 <!-- Einde -->
 <section id="sEnd" class="center hidden"><div style="max-width:620px">
   <div style="font-size:56px" id="endIcon">🏁</div>
@@ -88,11 +99,11 @@
 
 <div id="pauseOv" class="overlay hidden"><div><div class="big">⏸ Pauze</div><p style="font-size:19px;opacity:.9">De leerkracht heeft de quiz even stilgezet.</p></div></div>
 
-<script src="config.js?v=4"></script>
-<script src="data.js?v=4"></script>
-<script src="live-common.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="data.js?v=5"></script>
+<script src="live-common.js?v=5"></script>
 <script>
-const SCREENS = ['sJoin', 'sConnecting', 'sLobby', 'sQuestion', 'sSent', 'sResult', 'sEnd'];
+const SCREENS = ['sJoin', 'sConnecting', 'sLobby', 'sQuestion', 'sSent', 'sResult', 'sBoard', 'sEnd'];
 const show = (id) => SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id));
 let sess = store('live-player');            // {code, pid, name}
 let pollTimer = null, fails = 0, lastKey = '', stopped = false;
@@ -169,13 +180,14 @@ function handle(s) {
   $('pauseOv').classList.toggle('hidden', !(s.st === 'q' && s.paused));
   if (s.st === 'q') cd.sync(s.left, s.paused); else cd.stop();
 
-  const key = `${s.st}|${s.qi}|${answered}`;
+  const key = `${s.st}|${s.qi}|${answered}|${!!s.board}`;
   if (key === lastKey) return;
   lastKey = key;
 
   if (s.st === 'lobby') { $('lobbyHi').textContent = `Je doet mee, ${me.name}!`; show('sLobby'); }
   else if (s.st === 'q' && answered) { showSent(s, local); }
   else if (s.st === 'q') { showQuestion(s); }
+  else if (s.st === 'rv' && s.board) { showBoard(s); }
   else if (s.st === 'rv') { showResult(s); }
   else if (s.st === 'end') { showEnd(s); stopped = true; }
 }
@@ -225,6 +237,33 @@ function showResult(s) {
   $('rRight').textContent = !r.ok && q && s.correctK != null ? `Het goede antwoord was: ${q.o[s.correctK].replace(/<[^>]+>/g, '')}` : '';
   $('rRank').textContent = `Je staat op plek ${me.rank} van ${me.of} · ${me.score} punten`;
   show('sResult');
+}
+
+function showBoard(s) {
+  const me = s.me || {};
+  $('bRank').textContent = `Plek ${me.rank}`;
+  const d = me.prev != null ? me.prev - me.rank : 0;
+  $('bMove').className = 'mv-big ' + (d > 0 ? 'up' : d < 0 ? 'down' : '');
+  $('bMove').textContent = d > 0 ? `▲ ${d}` : d < 0 ? `▼ ${-d}` : '';
+  $('bScore').textContent = `${me.score} punten · ${me.correct} goed`;
+  $('bStreak').textContent = me.streak >= 2 ? `🔥 ${me.streak} goed op rij!` : '';
+  // rijtje: wie boven je staat, jij, wie onder je staat
+  const rows = [];
+  if (s.above2 && !s.below) rows.push({ ...s.above2, rank: me.rank - 2 });
+  if (s.above) rows.push({ ...s.above, rank: me.rank - 1 });
+  rows.push({ name: me.name, score: me.score, streak: me.streak, rank: me.rank, me: true });
+  if (s.below) rows.push({ ...s.below, rank: me.rank + 1 });
+  $('bList').innerHTML = rows.map(r => `<div class="row ${r.me ? 'me' : ''}"><span class="pos">${r.rank}</span>
+    <span>${esc(r.name)}${r.me ? ' (jij)' : ''}</span><span class="gain">${r.streak >= 2 ? '🔥' + r.streak : ''}</span><span class="sc">${r.score}</span></div>`).join('');
+  let tip;
+  if (me.rank === 1 && s.below) tip = `Je staat bovenaan! ${s.below.name} zit ${me.score - s.below.score} punten achter je.`;
+  else if (me.rank === 1) tip = 'Je staat bovenaan!';
+  else if (s.above) {
+    const gap = s.above.score - me.score;
+    tip = gap === 0 ? `Je staat gelijk met ${s.above.name}!` : `Nog ${gap} punten tot ${s.above.name}. Je kunt het!`;
+  }
+  $('bTip').textContent = tip || '';
+  show('sBoard');
 }
 
 function showEnd(s) {

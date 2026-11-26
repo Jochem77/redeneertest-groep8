@@ -221,6 +221,16 @@ function livePoll_(p, now) {
     out.correctK = Number(g.key[g.qi]);
   }
   if (g.st === 'end') out.top = ranking_(g).slice(0, 3).map(id => ({ name: g.ro[id].n, score: g.ro[id].s }));
+  out.me.best = me.bs || 0;
+  if (g.rv && g.rv.qi === g.qi && g.rv.res[pid]) out.me.prev = g.rv.res[pid].pr;
+  if (g.st === 'rv' && g.bd) {                         // tussenstand: buren in de ranglijst
+    const rk = ranking_(g), i = rk.indexOf(pid);
+    const nb = id => id ? { name: g.ro[id].n, score: g.ro[id].s, streak: g.ro[id].st } : null;
+    out.board = true;
+    out.above = nb(rk[i - 1]);
+    out.above2 = nb(rk[i - 2]);
+    out.below = nb(rk[i + 1]);
+  }
   return json_(out);
 }
 
@@ -235,6 +245,7 @@ function liveHost_(p, now) {
     else if (cmd === 'pause' && g.st === 'q' && g.run) { g.el = elapsed_(g, now); g.run = null; changed = true; }
     else if (cmd === 'resume' && g.st === 'q' && !g.run) { g.run = now; changed = true; }
     else if (cmd === 'skip' && g.st === 'q') { finishQ_(g, now); changed = true; }
+    else if (cmd === 'board' && g.st === 'rv' && !g.bd) { g.bd = true; changed = true; }
     else if (cmd === 'next' && g.st === 'rv') {
       if (g.qi + 1 < g.qs.length) startQ_(g, g.qi + 1, now); else endGame_(g, now);
       changed = true;
@@ -259,27 +270,34 @@ function liveHost_(p, now) {
     const rv = g.rv && g.rv.qi === g.qi ? g.rv : null;
     const out = { st: g.st, qi: g.qi, n: g.qs.length, qid: g.qs[g.qi] || null, code: g.code,
       players: ranking_(g).map((id, i) => ({ pid: id, name: g.ro[id].n, score: g.ro[id].s, correct: g.ro[id].c,
-        rank: i + 1, online: online(id), answered: g.st === 'q' && hasAns(id), gain: rv && rv.res[id] ? rv.res[id].p : 0 })) };
+        rank: i + 1, online: online(id), answered: g.st === 'q' && hasAns(id), gain: rv && rv.res[id] ? rv.res[id].p : 0,
+        streak: g.ro[id].st || 0, best: g.ro[id].bs || 0,
+        prev: rv && rv.res[id] ? rv.res[id].pr : null, ok: !!(rv && rv.res[id] && rv.res[id].ok),
+        ms: rv && rv.res[id] ? rv.res[id].ms : null })) };
+    out.board = g.st === 'rv' && !!g.bd;
     if (g.st === 'q') { out.left = Math.max(0, Q_MS - elapsed_(g, now)); out.paused = !g.run; }
     if (rv) { out.counts = rv.counts; out.correctK = Number(g.key[g.qi]); }
     return json_(out);
   });
 }
 
-function startQ_(g, qi, now) { g.qi = qi; g.st = 'q'; g.el = 0; g.run = now; g.rv = null; }
+function startQ_(g, qi, now) { g.qi = qi; g.st = 'q'; g.el = 0; g.run = now; g.rv = null; g.bd = false; }
 
 function finishQ_(g, now) {
   g.el = Math.min(Q_MS, elapsed_(g, now)); g.run = null;
   const c = cache_(), keys = g.order.map(id => ansKey_(g, g.qi, id));
   const got = keys.length ? c.getAll(keys) : {};
   const correct = Number(g.key[g.qi]), counts = [0, 0, 0, 0], res = {}, rows = [];
+  const before = {};                                     // plek vóór deze vraag (voor stijgers/dalers)
+  if (g.qi > 0) ranking_(g).forEach((id, i) => { before[id] = i + 1; });
   g.order.forEach((id, i) => {
     const raw = got[keys[i]], a = raw ? JSON.parse(raw) : null, pl = g.ro[id];
     let pts = 0, ok = false;
     if (a) { counts[a.k]++; ok = a.k === correct; if (ok) pts = Math.round(1000 * (1 - a.ms / Q_MS / 2)); }
     pl.s += pts;
     if (ok) { pl.c++; pl.st++; } else pl.st = 0;
-    res[id] = { k: a ? a.k : null, p: pts, ok, ms: a ? a.ms : null };
+    pl.bs = Math.max(pl.bs || 0, pl.st);
+    res[id] = { k: a ? a.k : null, p: pts, ok, ms: a ? a.ms : null, pr: before[id] || null };
     rows.push([new Date(now), g.code, safe_(pl.n, 20), g.qi + 1, g.qs[g.qi], a ? 'ABCD'[a.k] : '',
       ok ? 'ja' : 'nee', a ? Math.round(a.ms / 100) / 10 : '', pts, pl.s]);
   });
