@@ -78,6 +78,80 @@ td.name{font-weight:700;white-space:normal;min-width:120px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;margin-top:12px}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-1px;margin-right:6px}
 .empty{padding:28px;text-align:center;color:var(--muted)}
+tbody tr{cursor:pointer;transition:background .12s}
+tbody tr:hover{background:var(--surface-2)}
+.view-btn{font:inherit;font-size:13px;font-weight:700;color:var(--brand);background:none;border:0;cursor:pointer;padding:0}
+button.cell{border:0;font:inherit;font-size:13px;cursor:pointer;transition:transform .08s}
+button.cell:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+
+/* detailvenster */
+dialog{width:calc(100% - 32px);max-width:840px;max-height:88vh;padding:0;border:1px solid var(--line);border-radius:18px;background:var(--bg);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(5,12,14,.6);backdrop-filter:blur(2px)}
+.dlg-head{position:sticky;top:0;z-index:2;background:var(--surface);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;gap:12px;align-items:flex-start}
+.dlg-head h2{margin:0;font-size:22px;letter-spacing:-.01em}
+.dlg-head p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.dlg-head .x{margin-left:auto;flex:0 0 auto}
+.dlg-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.dlg-body{padding:8px 20px 20px}
+.part-h{margin:18px 0 6px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand)}
+.dq{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:10px}
+.dq-head{display:flex;gap:10px;align-items:flex-start}
+.dq-head .id{font-weight:800;color:var(--brand);min-width:30px}
+.dq-q{flex:1}
+.dq-q .q-sub{color:var(--muted)}
+.badge{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:14px}
+.badge.ok{background:color-mix(in srgb,var(--good) 20%,transparent);color:var(--good)}
+.badge.no{background:color-mix(in srgb,var(--bad) 20%,transparent);color:var(--bad)}
+.badge.empty{background:var(--surface-2);color:var(--muted)}
+.only-wrong .dq.st-ok{display:none}
+.dopts{list-style:none;margin:12px 0 0 40px;padding:0;display:grid;gap:6px}
+.dopts li{border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;position:relative;overflow:hidden}
+.dopts li .t{flex:1;min-width:140px;position:relative}
+.dopts li.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
+.dopts li.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.tag{font-size:12px;font-weight:800;padding:2px 8px;border-radius:99px;position:relative}
+.tag.good{background:var(--good);color:#06170d}
+.tag.pick{background:var(--ink);color:var(--bg)}
+.tag.pick.bad{background:var(--bad);color:#1f0b03}
+.dopts .fillbar{position:absolute;left:0;top:0;bottom:0;background:color-mix(in srgb,var(--brand) 14%,transparent)}
+.dopts .cnt{font-weight:800;font-variant-numeric:tabular-nums;position:relative}
+.dopts .who{flex-basis:100%;font-size:13px;color:var(--muted);position:relative}
+.why{margin:10px 0 0 40px;font-size:14px;color:var(--muted)}
+.why b{color:var(--ink)}
+.dq .fig{margin:12px 0 0 40px}
+@media (max-width:560px){.dopts,.why,.dq .fig{margin-left:0}}
+
+/* figuren (zelfde als in de test) */
+:root{--fig:var(--ink);--fig-bg:var(--surface)}
+.fig{display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+.seq{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.seq span{min-width:44px;padding:6px 10px;text-align:center;border-radius:10px;background:var(--surface-2);font-weight:800;font-variant-numeric:tabular-nums}
+.seq span.qm{background:var(--accent);color:#1b1206}
+.seq span.ar{background:transparent;min-width:auto;padding:6px 2px;color:var(--muted)}
+.seq span.sp{background:transparent;min-width:12px;padding:0}
+.quote{display:block;margin:6px 0;padding-left:12px;border-left:3px solid var(--line)}
+.arrows{display:flex;gap:6px;align-items:center}
+.arrows svg{width:40px;height:40px}
+.qbox{width:40px;height:40px;border-radius:10px;border:2px dashed var(--accent);display:grid;place-items:center;font-weight:800;color:var(--accent)}
+.rules{display:grid;gap:8px}
+.rule{display:flex;align-items:center;gap:10px}
+.rule .to,.rule .plus{color:var(--muted);font-weight:700}
+.strip{display:flex}
+.strip i{width:24px;height:24px;border:2px solid var(--fig);margin-left:-2px;background:var(--fig-bg)}
+.strip i:first-child{margin-left:0}
+.strip i.on{background:var(--fig)}
+.grid{position:relative;display:grid;gap:2px;padding:4px}
+.grid .c{width:var(--s);height:var(--s);display:grid;place-items:center;font-weight:800;font-size:calc(var(--s)*.4);outline:2px solid var(--fig);background:var(--fig-bg);color:var(--fig)}
+.grid .c.blank{outline:0;background:transparent}
+.grid .c.on{background:var(--fig)}
+.grid .c.lab{background:var(--surface-2)}
+.grid .c.dot::after{content:"";width:34%;height:34%;border-radius:50%;background:var(--fig)}
+.grid .c.cross::after{content:"×";font-size:calc(var(--s)*.6);line-height:1}
+.grid .c.start{background:var(--accent);color:#1b1206}
+.mline{position:absolute;border:0 dashed var(--accent)}
+.mline.v{border-left-width:3px;top:-8px;bottom:-8px}
+.mline.h{border-top-width:3px;left:-8px;right:-8px}
+.rot-arrow{font-size:26px;color:var(--muted);font-weight:700}
 .hidden{display:none!important}
 </style>
 </head>
@@ -113,12 +187,12 @@ td.name{font-weight:700;white-space:normal;min-width:120px}
       <thead><tr>
         <th data-s="name">Naam</th><th data-s="done">Status</th><th class="num" data-s="score">Aantal goed ▾</th>
         <th class="num" data-s="p0">Woordverb.</th><th class="num" data-s="p1">Getallen</th><th class="num" data-s="p2">Logisch</th><th class="num" data-s="p3">Figuren</th>
-        <th data-s="updated">Laatst bijgewerkt</th>
+        <th data-s="updated">Laatst bijgewerkt</th><th></th>
       </tr></thead>
       <tbody id="tbody"></tbody>
     </table></div>
 
-    <div class="tools"><h2>Per vraag</h2><span class="muted" style="font-size:14px">% goed van de leerlingen die de vraag beantwoordden</span></div>
+    <div class="tools"><h2>Per vraag</h2><span class="muted" style="font-size:14px">% goed van de leerlingen die de vraag beantwoordden · klik op een vraag voor details</span></div>
     <div class="card" style="margin-top:0">
       <div class="heat" id="heat"></div>
       <div class="legend">
@@ -129,6 +203,8 @@ td.name{font-weight:700;white-space:normal;min-width:120px}
     </div>
   </section>
 </main>
+
+<dialog id="dlg" aria-labelledby="dlgTitle"><div id="dlgInner"></div></dialog>
 
 <script src="config.js?v=2"></script>
 <script src="data.js?v=2"></script>
@@ -185,15 +261,15 @@ function render(){
     if (sortKey === 'updated') { x = new Date(x).getTime() || 0; y = new Date(y).getTime() || 0; }
     return sortDir * ((x > y) - (x < y));
   });
-  $('tbody').innerHTML = list.length ? list.map(r => `<tr>
+  $('tbody').innerHTML = list.length ? list.map(r => `<tr data-sid="${esc(r.sid)}" title="Bekijk de antwoorden van ${esc(r.name || 'deze leerling')}">
     <td class="name">${esc(r.name || '(geen naam)')}</td>
     <td>${r.done ? '<span class="status done">Klaar</span>' : `<span class="status busy">Bezig · ${r.answered}/96</span>`}</td>
     <td class="num"><div class="score"><div class="mini"><div style="width:${r.score / 96 * 100}%"></div></div><b>${r.score}</b><span class="muted">/96</span></div></td>
     <td class="num">${r.p0}/24</td><td class="num">${r.p1}/24</td><td class="num">${r.p2}/24</td><td class="num">${r.p3}/24</td>
-    <td class="muted">${fmtDate(r.updated)}</td></tr>`).join('')
-    : `<tr><td colspan="8" class="empty">Nog geen resultaten${filter === 'done' ? ' van leerlingen die klaar zijn' : ''}.</td></tr>`;
+    <td class="muted">${fmtDate(r.updated)}</td><td><button class="view-btn">Bekijk →</button></td></tr>`).join('')
+    : `<tr><td colspan="9" class="empty">Nog geen resultaten${filter === 'done' ? ' van leerlingen die klaar zijn' : ''}.</td></tr>`;
 
-  document.querySelectorAll('th').forEach(th => {
+  document.querySelectorAll('th[data-s]').forEach(th => {
     th.textContent = th.textContent.replace(/ [▾▴]$/, '') + (th.dataset.s === sortKey ? (sortDir < 0 ? ' ▾' : ' ▴') : '');
   });
 
@@ -203,9 +279,67 @@ function render(){
     rows.forEach(r => { const a = (r.answers || {})[id]; if (a != null) { n++; if (a === q.a) ok++; } });
     const pct = n ? Math.round(ok / n * 100) : null;
     const bg = pct == null ? 'var(--surface-2)' : pct < 40 ? '#e8806a' : pct < 70 ? '#f2c46b' : '#7fd3a0';
-    h += `<div class="cell" style="background:${bg};${pct == null ? 'color:var(--muted)' : ''}" title="${id}: ${ok} van ${n} goed">${id}<small>${pct == null ? '–' : pct + '%'}</small></div>`;
+    h += `<button class="cell" data-id="${id}" style="background:${bg};${pct == null ? 'color:var(--muted)' : ''}" title="${id}: ${ok} van ${n} goed">${id}<small>${pct == null ? '–' : pct + '%'}</small></button>`;
   }));
   $('heat').innerHTML = h;
+  $('tbody').querySelectorAll('tr[data-sid]').forEach(tr => tr.onclick = () => showPupil(tr.dataset.sid));
+  $('heat').querySelectorAll('.cell').forEach(c => c.onclick = () => showQuestion(c.dataset.id));
+}
+
+/* ---------- detailvensters ---------- */
+const PART_NAMES = ['Woordverbanden', 'Getalpatronen', 'Logisch denken', 'Figuren en ruimte'];
+function openDlg(html){
+  $('dlgInner').innerHTML = html;
+  const d = $('dlg');
+  d.querySelector('.x').onclick = () => d.close();
+  if (!d.open) d.showModal();
+  d.scrollTop = 0;
+}
+$('dlg').addEventListener('click', e => { if (e.target === $('dlg')) $('dlg').close(); });
+const qHead = (id, q, badge) => `<div class="dq-head">${badge || ''}<span class="id">${id}</span><div class="dq-q">${q.q}${q.sub ? `<div class="q-sub">${q.sub}</div>` : ''}</div></div>${q.f ? `<div class="fig">${q.f}</div>` : ''}`;
+
+function showPupil(sid){
+  const r = rows.find(x => String(x.sid) === sid); if (!r) return;
+  const wrong = r.answered - r.score;
+  let h = `<div class="dlg-head"><div><h2 id="dlgTitle">${esc(r.name || '(geen naam)')}</h2>
+    <p>${r.score} van 96 goed · ${wrong} fout · ${96 - r.answered} niet beantwoord · ${r.done ? 'klaar' : 'nog bezig'}</p>
+    <div class="dlg-tools"><button class="chip on" data-v="all">Alle vragen</button><button class="chip" data-v="wrong">Alleen fout of leeg</button></div></div>
+    <button class="icon-btn x" aria-label="Sluiten">✕</button></div><div class="dlg-body" id="pupilBody">`;
+  OPG.forEach((o, i) => {
+    if (i === 0 || OPG[i-1].p !== o.p) h += `<div class="part-h">Deel ${o.p + 1} · ${PART_NAMES[o.p]}</div>`;
+    o.qs.forEach((q, j) => {
+      const id = qid(i, j), mine = r.answers[id], st = mine == null ? 'empty' : mine === q.a ? 'ok' : 'no';
+      const badge = `<span class="badge ${st}">${st === 'ok' ? '✓' : st === 'no' ? '✗' : '–'}</span>`;
+      h += `<div class="dq st-${st}">${qHead(id, q, badge)}<ul class="dopts">` + q.o.map((t, k) => {
+        const cls = k === q.a ? 'right' : k === mine ? 'wrong' : '';
+        return `<li class="${cls}"><span class="t">${t}</span>${k === mine ? `<span class="tag pick ${k !== q.a ? 'bad' : ''}">gekozen</span>` : ''}${k === q.a ? '<span class="tag good">goed antwoord</span>' : ''}</li>`;
+      }).join('') + `</ul>${mine == null ? '<p class="why"><b>Niet beantwoord.</b></p>' : ''}<p class="why"><b>Uitleg:</b> ${q.w}</p></div>`;
+    });
+  });
+  openDlg(h + '</div>');
+  $('dlgInner').querySelectorAll('.dlg-tools .chip').forEach(c => c.onclick = () => {
+    $('dlgInner').querySelectorAll('.dlg-tools .chip').forEach(x => x.classList.toggle('on', x === c));
+    $('pupilBody').classList.toggle('only-wrong', c.dataset.v === 'wrong');
+  });
+}
+
+function showQuestion(id){
+  const i = parseInt(id, 10) - 1, j = 'abcd'.indexOf(id.slice(-1)), o = OPG[i], q = o.qs[j];
+  const by = q.o.map(() => []), none = [];
+  rows.forEach(r => { const a = (r.answers || {})[id]; (a == null ? none : by[a]).push(r.name || '(geen naam)'); });
+  const n = by.reduce((s, x) => s + x.length, 0), ok = by[q.a].length;
+  const names = (list) => list.slice().sort((a, b) => a.localeCompare(b, 'nl')).map(esc).join(', ');
+  let h = `<div class="dlg-head"><div><h2 id="dlgTitle">Vraag ${id}</h2>
+    <p>Deel ${o.p + 1} · ${PART_NAMES[o.p]} · ${n ? `${ok} van ${n} goed (${Math.round(ok / n * 100)}%)` : 'nog door niemand beantwoord'}</p></div>
+    <button class="icon-btn x" aria-label="Sluiten">✕</button></div>
+    <div class="dlg-body"><div class="dq">${qHead(id, q)}<ul class="dopts">` + q.o.map((t, k) => {
+      const c = by[k].length, pct = n ? c / n * 100 : 0;
+      return `<li class="${k === q.a ? 'right' : ''}"><span class="fillbar" style="width:${pct}%"></span><span class="t">${t}</span>
+        ${k === q.a ? '<span class="tag good">goed antwoord</span>' : ''}<span class="cnt">${c}×</span>
+        ${c ? `<span class="who">${names(by[k])}</span>` : ''}</li>`;
+    }).join('') + `</ul>${none.length ? `<p class="why"><b>Niet beantwoord (${none.length}):</b> ${names(none)}</p>` : ''}
+    <p class="why"><b>Uitleg:</b> ${q.w}</p></div></div>`;
+  openDlg(h);
 }
 
 $('loadBtn').onclick = load;
@@ -214,7 +348,7 @@ $('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') load();
 document.querySelectorAll('.chip').forEach(c => c.onclick = () => {
   filter = c.dataset.f; document.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); render();
 });
-document.querySelectorAll('th').forEach(th => th.onclick = () => {
+document.querySelectorAll('th[data-s]').forEach(th => th.onclick = () => {
   const k = th.dataset.s;
   if (k === sortKey) sortDir *= -1; else { sortKey = k; sortDir = (k === 'name' ? 1 : -1); }
   render();
