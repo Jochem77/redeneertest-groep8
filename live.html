@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Denkrace live</title>
+<meta name="description" content="Doe mee met de live quiz: vul de spelcode en je naam in.">
+<script>
+  (function(){ var t = 'dark'; try { t = localStorage.getItem('redeneertest-g8-v1-theme') || 'dark'; } catch (e) {} document.documentElement.dataset.theme = t; })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="live.css?v=3">
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="logo"><div class="logo-mark">★</div><span>Denkrace</span></div>
+  <div class="spacer"></div>
+  <span id="meChip" class="muted" style="font-weight:700"></span>
+  <button class="icon-btn" id="themeBtn" title="Licht / donker" aria-label="Wissel licht en donker">◐</button>
+</div></header>
+
+<div id="conn" class="conn hidden">Verbinding kwijt… we proberen het opnieuw</div>
+
+<!-- Meedoen -->
+<section id="sJoin" class="center"><div>
+  <h1>Doe mee!</h1>
+  <p class="muted" style="margin:0 0 22px">Vul de spelcode in die de leerkracht laat zien, en je naam.</p>
+  <div class="card" style="text-align:left">
+    <label for="codeIn" style="font-weight:700">Spelcode</label>
+    <input id="codeIn" inputmode="numeric" maxlength="6" placeholder="123456" autocomplete="off" style="font-size:28px;font-weight:800;letter-spacing:.2em;text-align:center;margin:6px 0 16px">
+    <label for="nameIn" style="font-weight:700">Je naam</label>
+    <input id="nameIn" type="text" maxlength="20" placeholder="Bijv. Sam" autocomplete="off" style="margin:6px 0 18px">
+    <button class="btn big" id="joinBtn" style="width:100%">Doe mee →</button>
+    <p class="err" id="joinErr"></p>
+  </div>
+</div></section>
+
+<!-- Verbinden -->
+<section id="sConnecting" class="center hidden"><div>
+  <h2 class="pulse">Verbinden…</h2>
+</div></section>
+
+<!-- Wachtkamer -->
+<section id="sLobby" class="center hidden"><div>
+  <div style="font-size:64px">🎉</div>
+  <h1 id="lobbyHi">Je doet mee!</h1>
+  <p class="muted pulse" style="font-size:19px">Wacht tot de leerkracht de quiz start…</p>
+  <p class="muted" style="margin-top:30px;font-size:14px">Ben je de verbinding kwijt? Open deze pagina gewoon opnieuw, dan ga je verder waar je was.</p>
+</div></section>
+
+<!-- Vraag -->
+<section id="sQuestion" class="hidden"><div class="wrap" style="padding-top:18px;padding-bottom:40px">
+  <div class="qmeta"><span id="qNum"></span><span><span class="secs" id="qSecs">60</span> s</span></div>
+  <div class="timerbar" id="qBar"><div style="width:100%"></div></div>
+  <div class="card" style="margin:16px 0" id="qBox"></div>
+  <div class="tiles" id="qTiles"></div>
+</div></section>
+
+<!-- Antwoord verstuurd -->
+<section id="sSent" class="center hidden"><div>
+  <div style="font-size:64px">✅</div>
+  <h1>Antwoord verstuurd!</h1>
+  <p class="muted" id="sentWhat" style="font-size:18px"></p>
+  <p class="muted pulse" style="font-size:18px">Even wachten op de anderen…</p>
+  <div class="qmeta" style="justify-content:center;margin-top:22px"><span><span class="secs" id="sentSecs">60</span> s over</span></div>
+</div></section>
+
+<!-- Uitslag van de vraag -->
+<section id="sResult" class="result hidden"><div>
+  <div class="big" id="rBig"></div>
+  <div class="pts" id="rPts"></div>
+  <div class="streak" id="rStreak"></div>
+  <div class="sub" id="rRight"></div>
+  <div class="sub" id="rRank"></div>
+  <p class="sub pulse" style="font-size:15px;margin-top:30px">Wacht op de volgende vraag…</p>
+</div></section>
+
+<!-- Einde -->
+<section id="sEnd" class="center hidden"><div style="max-width:620px">
+  <div style="font-size:56px" id="endIcon">🏁</div>
+  <h1 id="endTitle">Klaar!</h1>
+  <p id="endSub" style="font-size:20px;font-weight:700;margin:0"></p>
+  <div id="endPodium"></div>
+  <p class="muted" style="font-size:14px">Bedankt voor het meedoen!</p>
+</div></section>
+
+<div id="pauseOv" class="overlay hidden"><div><div class="big">⏸ Pauze</div><p style="font-size:19px;opacity:.9">De leerkracht heeft de quiz even stilgezet.</p></div></div>
+
+<script src="config.js?v=3"></script>
+<script src="data.js?v=3"></script>
+<script src="live-common.js?v=3"></script>
+<script>
+const SCREENS = ['sJoin', 'sConnecting', 'sLobby', 'sQuestion', 'sSent', 'sResult', 'sEnd'];
+const show = (id) => SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id));
+let sess = store('live-player');            // {code, pid, name}
+let pollTimer = null, fails = 0, lastKey = '', stopped = false;
+const cd = makeCountdown(left => {
+  if (!$('sQuestion').classList.contains('hidden')) renderTimer($('qBar'), $('qSecs'), left);
+  $('sentSecs').textContent = Math.ceil(left / 1000);
+});
+
+/* ---------- meedoen ---------- */
+const params = new URLSearchParams(location.search);
+$('codeIn').value = params.get('code') || (sess && sess.code) || '';
+$('nameIn').value = (sess && sess.name) || '';
+const ERR = {
+  nogame: 'Deze spelcode bestaat niet (meer). Controleer de code.',
+  taken: 'Deze naam is al in gebruik. Kies een andere naam.',
+  ended: 'Dit spel is al afgelopen.',
+  full: 'Het spel zit vol.',
+  name: 'Vul je naam in.',
+};
+async function join() {
+  const code = $('codeIn').value.replace(/\D/g, ''), name = $('nameIn').value.trim();
+  if (code.length !== 6) { $('joinErr').textContent = 'De spelcode heeft 6 cijfers.'; return; }
+  if (!name) { $('joinErr').textContent = ERR.name; return; }
+  $('joinBtn').disabled = true; $('joinErr').textContent = '';
+  try {
+    const r = await api({ action: 'join', code, name });
+    if (r.error) { $('joinErr').textContent = ERR[r.error] || 'Er ging iets mis. Probeer het opnieuw.'; return; }
+    sess = { code, pid: r.pid, name: r.name }; store('live-player', sess);
+    stopped = false; lastKey = ''; show('sConnecting'); poll();
+  } catch (e) {
+    $('joinErr').textContent = 'Geen verbinding. Controleer het internet en probeer opnieuw.';
+  } finally { $('joinBtn').disabled = false; }
+}
+$('joinBtn').onclick = join;
+['codeIn', 'nameIn'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') join(); }));
+$('themeBtn').onclick = themeToggle;
+
+/* ---------- pollen ---------- */
+function schedule(ms) { clearTimeout(pollTimer); if (!stopped) pollTimer = setTimeout(poll, ms); }
+async function poll() {
+  if (!sess) return;
+  let s;
+  try {
+    s = await api({ action: 'poll', code: sess.code, pid: sess.pid }, 8000);
+    if (s.error) throw new Error(s.error);
+    fails = 0; $('conn').classList.add('hidden');
+  } catch (e) {
+    fails++; if (fails >= 1) $('conn').classList.remove('hidden');
+    return schedule(Math.min(1500 * fails, 5000));
+  }
+  handle(s);
+  schedule(s.st === 'q' ? 1200 : s.st === 'lobby' ? 2000 : 1600);
+}
+window.addEventListener('online', () => schedule(50));
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') schedule(50); });
+
+function leave(msg) {
+  stopped = true; clearTimeout(pollTimer); cd.stop();
+  const keepName = sess && sess.name;
+  sess = null; store('live-player', null);
+  $('pauseOv').classList.add('hidden'); $('meChip').textContent = '';
+  if (keepName) $('nameIn').value = keepName;
+  $('joinErr').textContent = msg || ''; show('sJoin');
+}
+
+function handle(s) {
+  if (s.st === 'nogame') return leave('Het spel is afgelopen of bestaat niet meer.');
+  if (s.st === 'noplayer') return leave('Je bent niet (meer) in dit spel. Doe opnieuw mee.');
+  const me = s.me || {};
+  $('meChip').textContent = `${me.name || sess.name} · ${me.score || 0} punten`;
+  const local = store('live-answer');
+  const answeredHere = s.st === 'q' && local && local.code === sess.code && local.qi === s.qi;
+  const answered = s.st === 'q' && (s.answered || answeredHere);
+  $('pauseOv').classList.toggle('hidden', !(s.st === 'q' && s.paused));
+  if (s.st === 'q') cd.sync(s.left, s.paused); else cd.stop();
+
+  const key = `${s.st}|${s.qi}|${answered}`;
+  if (key === lastKey) return;
+  lastKey = key;
+
+  if (s.st === 'lobby') { $('lobbyHi').textContent = `Je doet mee, ${me.name}!`; show('sLobby'); }
+  else if (s.st === 'q' && answered) { showSent(s, local); }
+  else if (s.st === 'q') { showQuestion(s); }
+  else if (s.st === 'rv') { showResult(s); }
+  else if (s.st === 'end') { showEnd(s); stopped = true; }
+}
+
+function showQuestion(s) {
+  const { q } = findQ(s.qid);
+  $('qNum').textContent = `Vraag ${s.qi + 1} van ${s.n}`;
+  $('qBox').innerHTML = questionHtml(q);
+  const order = shuffleFor(sess.pid + s.qid, q.o.length);
+  $('qTiles').innerHTML = order.map((k, pos) =>
+    `<button class="tile c${pos}" data-k="${k}"><span class="sym">${SYMS[pos]}</span><span class="t">${q.o[k]}</span></button>`).join('');
+  $('qTiles').querySelectorAll('.tile').forEach(b => b.onclick = () => answer(s, +b.dataset.k));
+  show('sQuestion'); window.scrollTo({ top: 0 });
+}
+
+async function answer(s, k) {
+  $('qTiles').querySelectorAll('.tile').forEach(b => b.disabled = true);
+  const local = { code: sess.code, qi: s.qi, k };
+  store('live-answer', local);
+  lastKey = `q|${s.qi}|true`;
+  showSent(s, local);
+  for (let i = 0; i < 4; i++) {
+    try {
+      const r = await api({ action: 'answer', code: sess.code, pid: sess.pid, qi: s.qi, k }, 8000);
+      if (r.reason === 'paused') {   // leerkracht pauzeerde net: opnieuw laten kiezen
+        store('live-answer', null); lastKey = ''; schedule(50); return;
+      }
+      return;
+    } catch (e) { await new Promise(r => setTimeout(r, 1500)); }
+  }
+}
+function showSent(s, local) {
+  const { q } = findQ(s.qid);
+  $('sentWhat').textContent = local && local.qi === s.qi && q ? `Jij koos: ${q.o[local.k].replace(/<[^>]+>/g, '')}` : '';
+  show('sSent');
+}
+
+function showResult(s) {
+  const r = s.res || {}, me = s.me || {}, { q } = findQ(s.qid);
+  const el = $('sResult');
+  el.classList.remove('ok', 'no', 'none');
+  if (r.k == null) { el.classList.add('none'); $('rBig').textContent = 'Geen antwoord'; }
+  else if (r.ok) { el.classList.add('ok'); $('rBig').textContent = 'Goed! 🎉'; }
+  else { el.classList.add('no'); $('rBig').textContent = 'Helaas…'; }
+  $('rPts').textContent = `+ ${r.p || 0} punten`;
+  $('rStreak').textContent = r.ok && me.streak >= 2 ? `🔥 ${me.streak} goed op rij!` : '';
+  $('rRight').textContent = !r.ok && q && s.correctK != null ? `Het goede antwoord was: ${q.o[s.correctK].replace(/<[^>]+>/g, '')}` : '';
+  $('rRank').textContent = `Je staat op plek ${me.rank} van ${me.of} · ${me.score} punten`;
+  show('sResult');
+}
+
+function showEnd(s) {
+  const me = s.me || {};
+  $('endIcon').textContent = me.rank === 1 ? '🏆' : me.rank <= 3 ? '🥇' : '🏁';
+  $('endTitle').textContent = me.rank <= 3 ? `Plek ${me.rank}!` : 'Klaar!';
+  $('endSub').textContent = `Je eindigde op plek ${me.rank} van ${me.of} met ${me.score} punten (${me.correct} goed).`;
+  $('endPodium').innerHTML = podiumHtml(s.top || []);
+  show('sEnd');
+  if (me.rank <= 3) confetti();
+  store('live-answer', null);
+}
+
+/* ---------- start ---------- */
+if (sess && sess.pid) { show('sConnecting'); poll(); } else show('sJoin');
+</script>
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Denkrace beheer</title>
+<script>
+  (function(){ var t = 'dark'; try { t = localStorage.getItem('redeneertest-g8-v1-theme') || 'dark'; } catch (e) {} document.documentElement.dataset.theme = t; })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="live.css?v=3">
+<style>
+.setup{max-width:860px;margin:0 auto;padding:28px 16px 60px}
+.label{font-weight:800;margin:22px 0 8px}
+.pick{display:flex;flex-wrap:wrap;gap:8px}
+.tog{font:inherit;font-weight:800;font-size:15px;min-width:44px;padding:8px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+.tog.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.deel{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.deel:first-child{border-top:0}
+@media (max-width:600px){.deel{grid-template-columns:1fr}}
+.deel .tog.all{min-width:auto}
+.sumline{margin-top:18px;font-weight:700}
+.resume{border:2px solid var(--accent);margin-bottom:18px}
+.lobby{max-width:980px;margin:0 auto;padding:24px 16px 60px;text-align:center}
+.joinbox{display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:center}
+.bigcode{font-size:clamp(54px,11vw,110px);font-weight:800;letter-spacing:.12em;line-height:1;font-variant-numeric:tabular-nums}
+.qr{background:#fff;padding:10px;border-radius:14px;display:inline-block;line-height:0}
+.url{font-weight:800;font-size:18px;color:var(--brand);word-break:break-all}
+.hostq{max-width:1100px;margin:0 auto;padding:18px 16px 60px}
+.hbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.hbar .grow{flex:1}
+.stat{display:inline-flex;flex-direction:column;align-items:center;min-width:90px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 14px}
+.stat b{font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted);font-weight:700}
+.minichips{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.minichips span{font-size:13px;font-weight:700;padding:4px 10px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
+.minichips span.done{border-color:var(--good);color:var(--good)}
+.minichips span.off{opacity:.4;text-decoration:line-through}
+.counts .tile{cursor:default}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="logo"><div class="logo-mark">★</div><span>Denkrace · beheer</span></div>
+  <div class="spacer"></div>
+  <a href="resultaten.html" class="muted" style="font-weight:700;font-size:14px">Resultaten redeneertest</a>
+  <button class="icon-btn" id="themeBtn" title="Licht / donker" aria-label="Wissel licht en donker">◐</button>
+</div></header>
+
+<div id="conn" class="conn hidden">Verbinding kwijt… we proberen het opnieuw</div>
+
+<!-- Instellen -->
+<section id="hSetup" class="setup">
+  <div class="card resume hidden" id="resumeCard">
+    <b>Er loopt nog een spel</b> <span class="muted" id="resumeInfo"></span>
+    <div class="row" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn" id="resumeBtn">Ga verder met dit spel</button>
+      <button class="btn ghost" id="forgetBtn">Vergeet het, nieuw spel</button>
+    </div>
+  </div>
+  <h1>Nieuw spel</h1>
+  <p class="muted" style="margin:0">Kies de vragen en maak een spel. Leerlingen doen mee via <b>live.html</b> met de spelcode.</p>
+  <div class="card" style="margin-top:20px">
+    <div class="label" style="margin-top:0">Code van de leerkracht</div>
+    <input type="password" id="adminIn" placeholder="Dezelfde code als bij de resultaten" style="max-width:340px">
+    <div class="label">Niveaus</div>
+    <div class="pick" id="lvlPick"></div>
+    <div class="label">Opgaven</div>
+    <div id="opgPick"></div>
+    <label style="display:flex;gap:10px;align-items:center;margin-top:16px;font-weight:600;cursor:pointer"><input type="checkbox" id="shuffleIn" style="width:20px;height:20px"> Vragen in willekeurige volgorde</label>
+    <p class="sumline" id="sumLine"></p>
+    <button class="btn big" id="createBtn">Maak spel →</button>
+    <p class="err" id="setupErr"></p>
+  </div>
+</section>
+
+<!-- Wachtkamer -->
+<section id="hLobby" class="lobby hidden">
+  <p class="muted" style="font-size:20px;font-weight:700;margin:0 0 10px">Ga naar <span class="url" id="joinUrl"></span> en vul deze code in:</p>
+  <div class="joinbox">
+    <div class="bigcode" id="bigCode"></div>
+    <div class="qr" id="qr" title="Scan om mee te doen"></div>
+  </div>
+  <h2 style="margin:28px 0 12px"><span id="pCount">0</span> spelers</h2>
+  <div class="chips" id="pChips"><span class="muted pulse">Wachten op spelers…</span></div>
+  <p class="muted" style="font-size:13px;margin:10px 0 24px">Klik op een naam om die speler te verwijderen.</p>
+  <button class="btn big" id="startBtn" disabled>Start de quiz ▶</button>
+  <div style="margin-top:14px"><button class="btn ghost" id="endLobbyBtn">Spel stoppen</button></div>
+</section>
+
+<!-- Vraag / uitslag / tussenstand -->
+<section id="hQ" class="hostq hidden">
+  <div class="hbar">
+    <div class="stat"><b id="hNum"></b><span>vraag</span></div>
+    <div class="stat"><b id="hSecs">60</b><span>seconden</span></div>
+    <div class="stat"><b id="hAns">0/0</b><span>antwoorden</span></div>
+    <div class="grow"></div>
+    <button class="btn warn" id="pauseBtn">⏸ Pauze</button>
+    <button class="btn ghost" id="skipBtn">Stop vraag</button>
+    <button class="btn" id="boardBtn">Tussenstand →</button>
+    <button class="btn" id="nextBtn">Volgende vraag →</button>
+    <button class="btn ghost" id="endBtn" title="Beëindig het hele spel">Beëindig spel</button>
+  </div>
+  <div class="timerbar" id="hBar"><div style="width:100%"></div></div>
+  <div id="hMain" style="margin-top:16px"></div>
+</section>
+
+<!-- Einde -->
+<section id="hEnd" class="lobby hidden">
+  <h1>🏆 Uitslag</h1>
+  <div id="endPodium"></div>
+  <div class="board" id="endBoard" style="max-width:640px;margin:20px auto 0;text-align:left"></div>
+  <p class="muted" style="margin-top:20px">Alle antwoorden en de eindstand staan in je Google Sheet, op de tabbladen <b>Live antwoorden</b> en <b>Live eindstand</b>.</p>
+  <button class="btn big" id="newBtn">Nieuw spel</button>
+</section>
+
+<div id="pauseOv" class="overlay hidden"><div><div class="big">⏸ Pauze</div><p style="font-size:19px;opacity:.9">De quiz staat stil.</p><button class="btn big" id="resumeOvBtn">▶ Verder</button></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="config.js?v=3"></script>
+<script src="data.js?v=3"></script>
+<script src="live-common.js?v=3"></script>
+<script>
+const SCREENS = ['hSetup', 'hLobby', 'hQ', 'hEnd'];
+const show = (id) => SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id));
+const JOIN_URL = new URL('live.html', location.href).href;
+let host = store('live-host');                // {code, key}
+let last = null, view = 'reveal', pollTimer = null, fails = 0, busy = false, renderedKey = '';
+const cd = makeCountdown(left => renderTimer($('hBar'), $('hSecs'), left));
+$('themeBtn').onclick = themeToggle;
+
+/* ---------- vragen kiezen ---------- */
+const PARTS = ['Woordverbanden', 'Getalpatronen', 'Logisch denken', 'Figuren en ruimte'];
+const lvls = new Set(['b']);
+const opg = new Set(OPG.map((_, i) => i));
+function renderPicker() {
+  $('lvlPick').innerHTML = ['a', 'b', 'c', 'd'].map(l => `<button class="tog ${lvls.has(l) ? 'on' : ''}" data-l="${l}">${l}${l === 'a' ? ' · makkelijk' : l === 'd' ? ' · moeilijk' : ''}</button>`).join('');
+  $('opgPick').innerHTML = PARTS.map((p, pi) => {
+    const idx = OPG.map((o, i) => o.p === pi ? i : -1).filter(i => i >= 0);
+    const all = idx.every(i => opg.has(i));
+    return `<div class="deel"><button class="tog all ${all ? 'on' : ''}" data-p="${pi}">${p}</button><div class="pick">` +
+      idx.map(i => `<button class="tog ${opg.has(i) ? 'on' : ''}" data-o="${i}">${i + 1}</button>`).join('') + '</div></div>';
+  }).join('');
+  const n = selected().length;
+  $('sumLine').textContent = n ? `${n} vragen · hooguit ${n} minuten (plus uitleg tussendoor)` : 'Kies minstens één niveau en één opgave.';
+  $('createBtn').disabled = !n;
+}
+function selected() {
+  const ids = [];
+  OPG.forEach((o, i) => { if (opg.has(i)) ['a', 'b', 'c', 'd'].forEach((l, j) => { if (lvls.has(l) && o.qs[j]) ids.push(`${i + 1}${l}`); }); });
+  return ids;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.tog'); if (!b) return;
+  if (b.dataset.l) lvls.has(b.dataset.l) ? lvls.delete(b.dataset.l) : lvls.add(b.dataset.l);
+  if (b.dataset.o) { const i = +b.dataset.o; opg.has(i) ? opg.delete(i) : opg.add(i); }
+  if (b.dataset.p) {
+    const idx = OPG.map((o, i) => o.p === +b.dataset.p ? i : -1).filter(i => i >= 0);
+    const all = idx.every(i => opg.has(i)); idx.forEach(i => all ? opg.delete(i) : opg.add(i));
+  }
+  renderPicker();
+});
+try { $('adminIn').value = localStorage.getItem('redeneertest-g8-code') || ''; } catch (e) {}
+
+$('createBtn').onclick = async () => {
+  const admin = $('adminIn').value.trim();
+  if (!admin) { $('setupErr').textContent = 'Vul de code van de leerkracht in.'; return; }
+  let ids = selected();
+  if ($('shuffleIn').checked) ids = shuffleFor(Math.random(), ids.length).map(i => ids[i]);
+  const key = ids.map(id => findQ(id).q.a).join('');
+  $('createBtn').disabled = true; $('setupErr').textContent = '';
+  try {
+    const r = await api({ action: 'create', admin, qs: ids.join(','), key });
+    if (r.error === 'code') { $('setupErr').textContent = 'Deze code klopt niet.'; return; }
+    if (r.error) { $('setupErr').textContent = 'Er ging iets mis (' + r.error + '). Is het nieuwe Apps Script geïmplementeerd?'; return; }
+    try { localStorage.setItem('redeneertest-g8-code', admin); } catch (e) {}
+    host = { code: r.code, key: r.hostKey }; store('live-host', host);
+    last = null; renderedKey = ''; startPolling();
+  } catch (e) {
+    $('setupErr').textContent = 'Geen verbinding met de Google Sheet. Probeer het opnieuw.';
+  } finally { $('createBtn').disabled = false; }
+};
+
+/* ---------- verbinden met het spel ---------- */
+let seq = 0, handledSeq = 0, polling = false, gen = 0;
+function startPolling() { if (polling) return; polling = true; loop(++gen); }
+async function loop(g) {
+  if (g !== gen || !host || !polling) return;
+  await send('state');
+  if (g !== gen) return;
+  if (!host || !polling || (last && last.st === 'end')) { polling = false; return; }
+  pollTimer = setTimeout(() => loop(g), fails ? Math.min(1500 * fails, 5000) : 1000);
+}
+async function send(cmd, extra = {}) {
+  if (!host) return;
+  if (cmd !== 'state') { if (busy) return; busy = true; }
+  const my = ++seq;
+  try {
+    const s = await api({ action: 'host', code: host.code, key: host.key, cmd, ...extra }, 12000);
+    if (s.error === 'nogame' || s.error === 'key') { forget('Dit spel bestaat niet meer.'); return; }
+    if (s.error) throw new Error(s.error);
+    fails = 0; $('conn').classList.add('hidden');
+    if (my < handledSeq) return;            // ouder antwoord dan wat al getoond wordt
+    handledSeq = my;
+    if (cmd === 'next' || cmd === 'start') view = 'reveal';
+    handle(s);
+  } catch (e) {
+    fails++; $('conn').classList.remove('hidden');
+    if (cmd !== 'state') alert('Dat lukte niet door een verbindingsprobleem. Probeer het nog eens.');
+  } finally {
+    if (cmd !== 'state') busy = false;
+  }
+}
+window.addEventListener('online', () => { if (host && !polling) startPolling(); });
+
+function forget(msg) {
+  polling = false; gen++;
+  clearTimeout(pollTimer); cd.stop(); host = null; store('live-host', null); last = null;
+  $('pauseOv').classList.add('hidden'); $('resumeCard').classList.add('hidden');
+  $('setupErr').textContent = msg || ''; show('hSetup'); renderPicker();
+}
+
+/* ---------- weergeven ---------- */
+function handle(s) {
+  last = s;
+  $('pauseOv').classList.toggle('hidden', !(s.st === 'q' && s.paused));
+  if (s.st === 'q') cd.sync(s.left, s.paused); else cd.stop();
+
+  if (s.st === 'lobby') return renderLobby(s);
+  if (s.st === 'end') return renderEnd(s);
+  show('hQ');
+  const key = `${s.st}|${s.qi}|${view}`;
+  const { q } = findQ(s.qid);
+  $('hNum').textContent = `${s.qi + 1}/${s.n}`;
+  const answeredN = s.players.filter(p => p.answered).length;
+  const activeN = s.players.filter(p => p.online || p.answered).length;
+  $('hAns').textContent = s.st === 'q' ? `${answeredN}/${activeN}` : `${(s.counts || []).reduce((a, b) => a + b, 0)}/${s.players.length}`;
+  $('pauseBtn').classList.toggle('hidden', s.st !== 'q');
+  $('pauseBtn').textContent = s.paused ? '▶ Verder' : '⏸ Pauze';
+  $('skipBtn').classList.toggle('hidden', s.st !== 'q');
+  $('boardBtn').classList.toggle('hidden', !(s.st === 'rv' && view === 'reveal'));
+  $('nextBtn').classList.toggle('hidden', !(s.st === 'rv' && view === 'board'));
+  $('nextBtn').textContent = s.qi + 1 < s.n ? 'Volgende vraag →' : 'Naar de uitslag 🏆';
+  $('hBar').classList.toggle('hidden', s.st !== 'q');
+  if (s.st !== 'q') $('hSecs').textContent = '–';
+
+  if (key !== renderedKey) {
+    renderedKey = key;
+    if (s.st === 'q') {
+      $('hMain').innerHTML = `<div class="card">${questionHtml(q)}</div>
+        <div class="tiles" style="margin-top:14px">${q.o.map((t, k) => `<div class="tile static c${k}"><span class="sym">${SYMS[k]}</span><span class="t">${t}</span></div>`).join('')}</div>
+        <div class="minichips" id="hChips"></div>`;
+    } else if (view === 'reveal') {
+      const total = (s.counts || []).reduce((a, b) => a + b, 0) || 1;
+      $('hMain').innerHTML = `<div class="card">${questionHtml(q)}</div>
+        <div class="tiles counts" style="margin-top:14px">${q.o.map((t, k) => `<div class="tile static c${k} ${k === s.correctK ? '' : 'dim'}">
+          <span class="sym">${k === s.correctK ? '✓' : SYMS[k]}</span><span class="t">${t}</span>
+          <span class="count" title="${Math.round((s.counts[k] || 0) / total * 100)}%">${s.counts[k] || 0}</span></div>`).join('')}</div>
+        <p class="muted" style="margin-top:14px"><b>Uitleg:</b> ${q.w}</p>`;
+    } else {
+      $('hMain').innerHTML = `<h2 style="text-align:center;margin:10px 0 18px">Tussenstand</h2><div class="board" id="hBoard" style="max-width:680px;margin:0 auto"></div>`;
+    }
+  }
+  if (s.st === 'q' && $('hChips')) {
+    $('hChips').innerHTML = s.players.map(p => `<span class="${p.answered ? 'done' : ''} ${p.online || p.answered ? '' : 'off'}" title="${p.online ? 'online' : 'niet verbonden'}">${esc(p.name)}</span>`).join('');
+  }
+  if ($('hBoard')) $('hBoard').innerHTML = boardHtml(s.players.slice(0, 10), true);
+}
+function boardHtml(list, gain) {
+  return list.map(p => `<div class="row"><span class="pos">${p.rank}</span><span>${esc(p.name)}</span>
+    <span class="gain">${gain && p.gain ? '+' + p.gain : ''}</span><span class="sc">${p.score}</span></div>`).join('') ||
+    '<p class="muted" style="text-align:center">Geen spelers.</p>';
+}
+let qrDone = '';
+function renderLobby(s) {
+  show('hLobby');
+  $('bigCode').textContent = s.code;
+  $('joinUrl').textContent = JOIN_URL.replace(/^https?:\/\//, '');
+  const link = JOIN_URL + '?code=' + s.code;
+  if (qrDone !== link && window.QRCode) { $('qr').innerHTML = ''; new QRCode($('qr'), { text: link, width: 170, height: 170 }); qrDone = link; }
+  $('pCount').textContent = s.players.length;
+  $('pChips').innerHTML = s.players.length
+    ? s.players.slice().sort((a, b) => a.name.localeCompare(b.name, 'nl')).map(p => `<button class="chip ${p.online ? '' : 'off'}" data-pid="${esc(p.pid)}" title="Verwijder ${esc(p.name)}">${esc(p.name)}</button>`).join('')
+    : '<span class="muted pulse">Wachten op spelers…</span>';
+  $('pChips').querySelectorAll('[data-pid]').forEach(b => b.onclick = () => {
+    if (confirm('Deze speler verwijderen?')) send('kick', { pid: b.dataset.pid });
+  });
+  $('startBtn').disabled = !s.players.length;
+}
+let endShown = false;
+function renderEnd(s) {
+  show('hEnd');
+  $('endPodium').innerHTML = podiumHtml(s.players.slice(0, 3));
+  $('endBoard').innerHTML = s.players.map(p => `<div class="row"><span class="pos">${p.rank}</span><span>${esc(p.name)}</span>
+    <span class="gain" style="color:var(--muted)">${p.correct} goed</span><span class="sc">${p.score}</span></div>`).join('');
+  if (!endShown) { endShown = true; confetti(); }
+}
+
+/* ---------- knoppen ---------- */
+$('startBtn').onclick = () => send('start');
+$('pauseBtn').onclick = () => send(last && last.paused ? 'resume' : 'pause');
+$('resumeOvBtn').onclick = () => send('resume');
+$('skipBtn').onclick = () => { if (confirm('Deze vraag nu stoppen?')) send('skip'); };
+$('boardBtn').onclick = () => { view = 'board'; handle(last); };
+$('nextBtn').onclick = () => send('next');
+$('endBtn').onclick = () => { if (confirm('Het hele spel beëindigen? De uitslag wordt opgeslagen.')) send('end'); };
+$('endLobbyBtn').onclick = () => { if (confirm('Spel stoppen?')) send('end'); };
+$('newBtn').onclick = () => { endShown = false; forget(''); };
+$('resumeBtn').onclick = () => { $('resumeCard').classList.add('hidden'); startPolling(); };
+$('forgetBtn').onclick = () => forget('');
+
+/* ---------- start ---------- */
+renderPicker();
+if (host && host.code) {
+  $('resumeInfo').textContent = `(spelcode ${host.code})`;
+  $('resumeCard').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
