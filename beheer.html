@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="live.css?v=5">
+<link rel="stylesheet" href="live.css?v=6">
 <style>
 .setup{max-width:860px;margin:0 auto;padding:28px 16px 60px}
 .label{font-weight:800;margin:22px 0 8px}
@@ -51,6 +51,18 @@
 .mv.up{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
 .mv.down{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
 .fire{font-size:14px;font-weight:800;color:var(--accent)}
+.table-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;text-align:left;max-width:900px;margin:0 auto}
+.ptable{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.ptable th,.ptable td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ptable th{font-size:13px;color:var(--muted);background:var(--surface-2)}
+.ptable .num{text-align:right}
+.ptable .pos{font-weight:800;color:var(--muted)}
+.ptable .nm{font-weight:700;white-space:normal}
+.ptable .prow{cursor:pointer}
+.ptable .prow:hover{background:var(--surface-2)}
+.ptable .pdetail td{white-space:normal;padding-top:0}
+.ptable .pdetail .hcs{margin:4px 0 8px}
+.pc{font-weight:800;color:var(--c);background:color-mix(in srgb,var(--c) 15%,transparent);padding:3px 9px;border-radius:99px}
 </style>
 </head>
 <body>
@@ -124,7 +136,13 @@
   <h1>🏆 Uitslag</h1>
   <div id="endPodium"></div>
   <div class="facts" id="endFacts" style="text-align:left"></div>
-  <div class="board" id="endBoard" style="max-width:640px;margin:20px auto 0;text-align:left"></div>
+  <h2 style="margin:28px 0 6px">Per leerling</h2>
+  <p class="muted" style="margin:0 0 12px;font-size:14px">Klik op een leerling voor de antwoorden per vraag.</p>
+  <div class="table-wrap"><table class="ptable">
+    <thead><tr><th>#</th><th>Leerling</th><th class="num">Punten</th><th class="num">Goed</th><th class="num">Reeks</th>
+      <th>Woordverb.</th><th>Getallen</th><th>Logisch</th><th>Figuren</th></tr></thead>
+    <tbody id="endBoard"></tbody>
+  </table></div>
   <p class="muted" style="margin-top:20px">Alle antwoorden en de eindstand staan in je Google Sheet, op de tabbladen <b>Live antwoorden</b> en <b>Live eindstand</b>.</p>
   <button class="btn big" id="newBtn">Nieuw spel</button>
 </section>
@@ -132,9 +150,9 @@
 <div id="pauseOv" class="overlay hidden"><div><div class="big">⏸ Pauze</div><p style="font-size:19px;opacity:.9">De quiz staat stil.</p><button class="btn big" id="resumeOvBtn">▶ Verder</button></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="config.js?v=5"></script>
-<script src="data.js?v=5"></script>
-<script src="live-common.js?v=5"></script>
+<script src="config.js?v=6"></script>
+<script src="data.js?v=6"></script>
+<script src="live-common.js?v=6"></script>
 <script>
 const SCREENS = ['hSetup', 'hLobby', 'hQ', 'hEnd'];
 const show = (id) => SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id));
@@ -280,7 +298,7 @@ function handle(s) {
   }
   if ($('hFacts')) $('hFacts').innerHTML = factsHtml(s);
   if (s.st === 'q' && $('hChips')) {
-    $('hChips').innerHTML = s.players.map(p => `<span class="${p.answered ? 'done' : ''} ${p.online || p.answered ? '' : 'off'}" title="${p.online ? 'online' : 'niet verbonden'}">${esc(p.name)}</span>`).join('');
+    $('hChips').innerHTML = s.players.map(p => `<span class="${p.answered ? 'done' : ''} ${p.online || p.answered ? '' : 'off'}" title="${p.online ? 'online' : 'niet verbonden'}">${avatar(p.av)} ${esc(p.name)}</span>`).join('');
   }
   if ($('hBoard')) $('hBoard').innerHTML = boardHtml(s.players.slice(0, 10), true);
 }
@@ -292,7 +310,7 @@ function moveHtml(p) {
 }
 function boardHtml(list, gain) {
   return list.map(p => `<div class="row"><span class="pos">${p.rank}</span>
-    <span class="nm">${esc(p.name)} ${moveHtml(p)} ${p.streak >= 2 ? `<span class="fire" title="${p.streak} goed op rij">🔥${p.streak}</span>` : ''}</span>
+    <span class="nm">${avatar(p.av)} ${esc(p.name)} ${moveHtml(p)} ${p.streak >= 2 ? `<span class="fire" title="${p.streak} goed op rij">🔥${p.streak}</span>` : ''}</span>
     <span class="gain">${gain && p.gain ? '+' + p.gain : ''}</span><span class="sc">${p.score}</span></div>`).join('') ||
     '<p class="muted" style="text-align:center">Geen spelers.</p>';
 }
@@ -323,7 +341,7 @@ function renderLobby(s) {
   if (qrDone !== link && window.QRCode) { $('qr').innerHTML = ''; new QRCode($('qr'), { text: link, width: 170, height: 170 }); qrDone = link; }
   $('pCount').textContent = s.players.length;
   $('pChips').innerHTML = s.players.length
-    ? s.players.slice().sort((a, b) => a.name.localeCompare(b.name, 'nl')).map(p => `<button class="chip ${p.online ? '' : 'off'}" data-pid="${esc(p.pid)}" title="Verwijder ${esc(p.name)}">${esc(p.name)}</button>`).join('')
+    ? s.players.slice().sort((a, b) => a.name.localeCompare(b.name, 'nl')).map(p => `<button class="chip ${p.online ? '' : 'off'}" data-pid="${esc(p.pid)}" title="Verwijder ${esc(p.name)}">${avatar(p.av)} ${esc(p.name)}</button>`).join('')
     : '<span class="muted pulse">Wachten op spelers…</span>';
   $('pChips').querySelectorAll('[data-pid]').forEach(b => b.onclick = () => {
     if (confirm('Deze speler verwijderen?')) send('kick', { pid: b.dataset.pid });
@@ -340,8 +358,22 @@ function renderEnd(s) {
   if (best >= 2) f.push(['🔥', 'Langste reeks van het spel', `${best} goed op rij`, who(P.filter(p => p.best === best))]);
   if (most > 0) f.push(['🎯', 'Meeste goed', `${most} van ${s.qi + 1}`, who(P.filter(p => p.correct === most))]);
   $('endFacts').innerHTML = f.map(([ic, t, big, sub]) => `<div class="fact"><span class="ic">${ic}</span><div><span class="t">${t}</span><b>${big}</b><span class="sub">${sub}</span></div></div>`).join('');
-  $('endBoard').innerHTML = s.players.map(p => `<div class="row"><span class="pos">${p.rank}</span><span>${esc(p.name)}</span>
-    <span class="gain" style="color:var(--muted)">${p.correct} goed</span><span class="sc">${p.score}</span></div>`).join('');
+  const qs = s.qs || [];
+  const cell = (got, asked) => {
+    if (!asked) return '<td class="muted">–</td>';
+    const r = got / asked, col = r >= .7 ? 'var(--good)' : r >= .4 ? 'var(--accent)' : 'var(--bad)';
+    return `<td><span class="pc" style="--c:${col}">${got}/${asked}</span></td>`;
+  };
+  $('endBoard').innerHTML = s.players.map(p => {
+    const pp = perPart(p.hist, qs);
+    return `<tr class="prow" data-pid="${esc(p.pid)}"><td class="pos">${p.rank}</td><td class="nm">${avatar(p.av)} ${esc(p.name)}</td>
+      <td class="num"><b>${p.score}</b></td><td class="num">${p.correct}/${(p.hist || '').length}</td><td class="num">${p.best ? '🔥' + p.best : '–'}</td>
+      ${[0, 1, 2, 3].map(d => cell(pp.got[d], pp.asked[d])).join('')}</tr>
+      <tr class="pdetail hidden" data-for="${esc(p.pid)}"><td></td><td colspan="8"><div class="hcs">${histChipsHtml(p.hist, qs) || '<span class="muted">Geen antwoorden.</span>'}</div></td></tr>`;
+  }).join('');
+  $('endBoard').querySelectorAll('.prow').forEach(tr => tr.onclick = () => {
+    $('endBoard').querySelector(`.pdetail[data-for="${tr.dataset.pid}"]`).classList.toggle('hidden');
+  });
   if (!endShown) { endShown = true; confetti(); }
 }
 

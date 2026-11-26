@@ -1,6 +1,25 @@
 /* Denkrace live — gedeelde hulpfuncties (heeft config.js en data.js nodig) */
 const Q_MS = 60000;
 const SYMS = ['▲', '●', '■', '★'];
+const AVATARS = ['🦊','🐼','🐸','🦁','🐯','🐨','🐵','🐧','🦉','🐙','🦄','🐢','🐬','🦖','🐝','🦋',
+  '🐶','🐱','🐰','🐻','🐷','🐮','🐔','🐳','🦒','🦓','🐘','🦔','🦜','🐞','🐲','🦦'];
+const avatar = (i) => AVATARS[Math.max(0, Math.min(AVATARS.length - 1, Number(i) || 0))];
+const PART_NAMES = ['Woordverbanden', 'Getalpatronen', 'Logisch denken', 'Figuren en ruimte'];
+const partOf = (qid) => Math.floor((parseInt(qid, 10) - 1) / 6);
+/* Per deel goed/gesteld uit geschiedenis ('1' goed, '0' fout, '-' geen antwoord) */
+function perPart(hist, qs) {
+  const got = [0, 0, 0, 0], asked = [0, 0, 0, 0];
+  [...(hist || '')].forEach((h, i) => { if (!qs[i]) return; const d = partOf(qs[i]); asked[d]++; if (h === '1') got[d]++; });
+  return { got, asked };
+}
+function partBarsHtml(hist, qs) {
+  const { got, asked } = perPart(hist, qs);
+  return PART_NAMES.map((n, d) => asked[d] ? `<div class="pbar"><span class="pn">${n}</span><span class="pv">${got[d]} van ${asked[d]}</span>
+    <div class="pt"><div style="width:${got[d] / asked[d] * 100}%;background:${got[d] / asked[d] >= .7 ? 'var(--good)' : got[d] / asked[d] >= .4 ? 'var(--accent)' : 'var(--bad)'}"></div></div></div>` : '').join('');
+}
+function histChipsHtml(hist, qs) {
+  return [...(hist || '')].map((h, i) => qs[i] ? `<span class="hc ${h === '1' ? 'ok' : h === '0' ? 'no' : 'none'}" title="${qs[i]}: ${h === '1' ? 'goed' : h === '0' ? 'fout' : 'geen antwoord'}">${qs[i]} ${h === '1' ? '✓' : h === '0' ? '✗' : '–'}</span>` : '').join('');
+}
 
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -80,7 +99,7 @@ function confetti() {
 }
 
 function podiumHtml(top) {
-  const slot = (p, n) => p ? `<div class="pod p${n}"><div class="nm">${esc(p.name)}</div><div class="pt">${p.score} punten</div><div class="block">${n}</div></div>` : `<div class="pod p${n}"></div>`;
+  const slot = (p, n) => p ? `<div class="pod p${n}"><div class="av">${avatar(p.av)}</div><div class="nm">${esc(p.name)}</div><div class="pt">${p.score} punten</div><div class="block">${n}</div></div>` : `<div class="pod p${n}"></div>`;
   return `<div class="podium">${slot(top[1], 2)}${slot(top[0], 1)}${slot(top[2], 3)}</div>`;
 }
 
