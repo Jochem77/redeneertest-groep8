@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="live.css?v=3">
+<link rel="stylesheet" href="live.css?v=4">
 <style>
 .setup{max-width:860px;margin:0 auto;padding:28px 16px 60px}
 .label{font-weight:800;margin:22px 0 8px}
@@ -120,9 +120,9 @@
 <div id="pauseOv" class="overlay hidden"><div><div class="big">⏸ Pauze</div><p style="font-size:19px;opacity:.9">De quiz staat stil.</p><button class="btn big" id="resumeOvBtn">▶ Verder</button></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="config.js?v=3"></script>
-<script src="data.js?v=3"></script>
-<script src="live-common.js?v=3"></script>
+<script src="config.js?v=4"></script>
+<script src="data.js?v=4"></script>
+<script src="live-common.js?v=4"></script>
 <script>
 const SCREENS = ['hSetup', 'hLobby', 'hQ', 'hEnd'];
 const show = (id) => SCREENS.forEach(s => $(s).classList.toggle('hidden', s !== id));
@@ -133,7 +133,7 @@ const cd = makeCountdown(left => renderTimer($('hBar'), $('hSecs'), left));
 $('themeBtn').onclick = themeToggle;
 
 /* ---------- vragen kiezen ---------- */
-const PARTS = ['Woordverbanden', 'Getalpatronen', 'Logisch denken', 'Figuren en ruimte'];
+
 const lvls = new Set(['b']);
 const opg = new Set(OPG.map((_, i) => i));
 function renderPicker() {
@@ -185,7 +185,7 @@ $('createBtn').onclick = async () => {
 };
 
 /* ---------- verbinden met het spel ---------- */
-let seq = 0, handledSeq = 0, polling = false, gen = 0;
+let reqSeq = 0, handledSeq = 0, polling = false, gen = 0;
 function startPolling() { if (polling) return; polling = true; loop(++gen); }
 async function loop(g) {
   if (g !== gen || !host || !polling) return;
@@ -197,7 +197,7 @@ async function loop(g) {
 async function send(cmd, extra = {}) {
   if (!host) return;
   if (cmd !== 'state') { if (busy) return; busy = true; }
-  const my = ++seq;
+  const my = ++reqSeq;
   try {
     const s = await api({ action: 'host', code: host.code, key: host.key, cmd, ...extra }, 12000);
     if (s.error === 'nogame' || s.error === 'key') { forget('Dit spel bestaat niet meer.'); return; }

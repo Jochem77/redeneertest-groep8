@@ -9,7 +9,7 @@
  *    Uitvoeren als: Ik.  Wie heeft toegang: Iedereen.
  * 5. Kopieer de web-app-URL (eindigt op /exec).
  */
-const CODE = 'verander-mij';
+const CODE = 'geheim';
 
 const HEAD = ['Sessie', 'Naam', 'Gestart', 'Laatst bijgewerkt', 'Klaar', 'Aantal goed (van 96)', 'Beantwoord',
   'Woordverbanden', 'Getalpatronen', 'Logisch denken', 'Figuren en ruimte'];
