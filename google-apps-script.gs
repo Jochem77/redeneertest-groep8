@@ -70,7 +70,11 @@ function doGet(e) {
   const ids = head.slice(HEAD.length);
   const rows = values.map(r => {
     const answers = {};
-    ids.forEach((id, k) => { const v = 'ABCD'.indexOf(r[HEAD.length + k]); if (v >= 0) answers[id] = v; });
+    ids.forEach((id, k) => {
+      const letter = String(r[HEAD.length + k] || '');
+      const v = letter.length === 1 ? 'ABCD'.indexOf(letter) : -1;  // leeg vakje = niet beantwoord
+      if (v >= 0) answers[id] = v;
+    });
     return { sid: r[0], name: String(r[1]), started: r[2], updated: r[3], done: r[4] === 'ja', answers };
   });
   return json_({ rows });
